@@ -286,7 +286,7 @@ void loop() {
   if(CurrentTime>=PreviousTime_read+interval_read and checkhotspot==0){
 
     // -------- READ SOIL --------------------------------------------------------------
-    byte data[] = {SlaveAddress, Modbusfunction, 0x00, 0x00, 0x00, 0x02, 0x95, 0xCB}; // Volumetric water content rawl AD Value(VWCRAWAD) Wet less dry More
+    byte data[] = {SlaveAddress, Modbusfunction, 0x00, 0x01, 0x00, 0x02, 0x95, 0xCB}; // Volumetric water content rawl AD Value(VWCRAWAD) Wet less dry More
     digitalWrite(RS485Enable_pin,RS485Transmit);
     Serial2.write(data, sizeof(data));
     Serial.println("request sent");
@@ -299,10 +299,10 @@ void loop() {
   
     if (rawh <= ERROR_TIMEOUT or rawt <= ERROR_TIMEOUT) {
       if(rawh <= ERROR_TIMEOUT){
-//        Serial.println("Error read humidity");
+        Serial.println("Error read humidity");
       }
       if(rawt <= ERROR_TIMEOUT){
-//        Serial.println("Error read temperature");
+        Serial.println("Error read temperature");
       }
       }else {
 //          for (int i = 0; i < 5; i++) {
@@ -330,9 +330,6 @@ void loop() {
         ADC_SoilMoisture = (float)((ADC_Soil[3]<<8) + ADC_Soil[4])/100;
         soilhumidity.push(ADC_SoilMoisture);
         Serial.println("   Soil Moisture (%) = " + String(ADC_SoilMoisture));
- //       if (ADC_SoilMoisture <= 100)
-//        float moils = moil.input(ADC_SoilMoisture);
-//        Serial.println();
         for (uint8_t i = 0; i < count; i++) {Serial.print(ADC_Soil[i], HEX); Serial.print(" ");}
         Serial.print("\n");
       }
@@ -416,15 +413,14 @@ void serialEvent2() // Read Data from RS485 ModBus RTU
       ADC_Soil[count] = respone;
       count++;
     }
-    Serial.print("count:");
-    Serial.print(count);
-    Serial.print(" ");
-    Serial.println(respone,HEX);
+//    Serial.print("count:");
+//    Serial.print(count);
+//    Serial.print(" ");
+//    Serial.println(respone,HEX);
   }
   if(count > 8)
   {
     ReceiveedData = true;
-//    digitalWrite(RS485Enable_pin,RS485Transmit);
   }
 }
 

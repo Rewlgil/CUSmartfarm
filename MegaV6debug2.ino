@@ -1,4 +1,3 @@
-//check ram
 
 #include <SPI.h>
 #include <Wire.h>
@@ -52,7 +51,7 @@ int RGB[]={10,11,12};
 int checkhotspot=0;
 int checklosswifi=0;
 int interval_read=1000*6;// อ่านทุกๆ 6 วินาที -----------------------  ****** TIME 
-int interval_send=1000*30;// ส่งทุกๆ 30 วินาที ----------------------- ****** TIME
+unsigned int interval_send=1000*60;// ส่งทุกๆ 60 วินาที ----------------------- ****** TIME
 String mac;
 String wifiname;
 unsigned long CurrentTime=0;
@@ -287,9 +286,10 @@ void loop() {
   if(CurrentTime>=PreviousTime_read+interval_read and checkhotspot==0){
 
     // -------- READ SOIL --------------------------------------------------------------
-    byte data[] = {SlaveAddress, Modbusfunction, 0x00, 0x01, 0x00, 0x02, 0x95, 0xCB}; // Volumetric water content rawl AD Value(VWCRAWAD) Wet less dry More
+    byte data[] = {SlaveAddress, Modbusfunction, 0x00, 0x00, 0x00, 0x02, 0x95, 0xCB}; // Volumetric water content rawl AD Value(VWCRAWAD) Wet less dry More
     digitalWrite(RS485Enable_pin,RS485Transmit);
     Serial2.write(data, sizeof(data));
+    Serial.println("request sent");
     delay(10);
     digitalWrite(RS485Enable_pin,RS485Receive);
     
@@ -299,24 +299,24 @@ void loop() {
   
     if (rawh <= ERROR_TIMEOUT or rawt <= ERROR_TIMEOUT) {
       if(rawh <= ERROR_TIMEOUT){
-        Serial.println("Error read humidity");
+//        Serial.println("Error read humidity");
       }
       if(rawt <= ERROR_TIMEOUT){
-        Serial.println("Error read temperature");
+//        Serial.println("Error read temperature");
       }
       }else {
 //          for (int i = 0; i < 5; i++) {
 //          Serial.print(humidity.get(i));
 //          Serial.print(" ");
 //          } 
-          Serial.println("");
+//          Serial.println("");
           humidity.push(SHT2x.GetHumidity());
           temperature.push(SHT2x.GetTemperature());
           checksensor=true;
-          Serial.print("Humidity(%RH): ");
-          Serial.print(humidity.mean());
-          Serial.print("\tTemperature(C): ");
-          Serial.print(temperature.mean());
+//          Serial.print("Humidity(%RH): ");
+//          Serial.print(humidity.mean());
+//          Serial.print("\tTemperature(C): ");
+//          Serial.print(temperature.mean());
     }
     showoled();
     PreviousTime_read=CurrentTime;
@@ -330,6 +330,9 @@ void loop() {
         ADC_SoilMoisture = (float)((ADC_Soil[3]<<8) + ADC_Soil[4])/100;
         soilhumidity.push(ADC_SoilMoisture);
         Serial.println("   Soil Moisture (%) = " + String(ADC_SoilMoisture));
+ //       if (ADC_SoilMoisture <= 100)
+//        float moils = moil.input(ADC_SoilMoisture);
+//        Serial.println();
         for (uint8_t i = 0; i < count; i++) {Serial.print(ADC_Soil[i], HEX); Serial.print(" ");}
         Serial.print("\n");
       }
@@ -393,42 +396,38 @@ void loop() {
 //  Serial.println(millis()-checkworktime);
   wdt_reset();
 }
+
+
 void serialEvent2() // Read Data from RS485 ModBus RTU
 { 
   while(Serial2.available()) 
   {
 //    Serial.println("Serial2 loop");
     byte respone = Serial2.read();
-//    if ((count == 0 && respone != 0xFF) || count != 0){
-//      ADC_Soil[count] = respone;
-//      Serial.print("count:");
-//      Serial.print(count);
-//      Serial.print(" ");
-//      Serial.println(respone,HEX);
-//      count++;
-//    }
     if(count < 3){
       if(respone == ADC_check[count]){
         ADC_Soil[count] = respone;
-//      Serial.print("count:");
-//      Serial.print(count);
-//      Serial.print(" ");
-//      Serial.println(respone,HEX);
-      count++;
+        count++;
       }
+      else
+        count = 0;
     }
     else {
       ADC_Soil[count] = respone;
-//      Serial.print("count:");
-//      Serial.print(count);
-//      Serial.print(" ");
-//      Serial.println(respone,HEX);
       count++;
     }
+    Serial.print("count:");
+    Serial.print(count);
+    Serial.print(" ");
+    Serial.println(respone,HEX);
   }
-  if(count >= 8)
+  if(count > 8)
+  {
     ReceiveedData = true;
+//    digitalWrite(RS485Enable_pin,RS485Transmit);
+  }
 }
+
 void updaterelaystatus(){
   Relay1_status = digitalRead(Relay1);
   Relay2_status = digitalRead(Relay2);
@@ -467,7 +466,7 @@ void updaterelaystatus(){
     Serial.println(msgtoesp);
     Serial3.println(msgtoesp);
 }
-void serialEvent3() 
+void serialEvent3()
 { 
   while(Serial3.available()) 
   {
@@ -591,7 +590,7 @@ void serialEvent3()
         digitalWrite(Relay3,HIGH);
         updaterelaystatus();
         showoled();
-//        break;
+//        break;F
       }
       if(inByte.indexOf("5`")!=-1){
         digitalWrite(Relay3,LOW);
